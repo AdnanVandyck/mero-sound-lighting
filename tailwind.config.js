@@ -1,14 +1,21 @@
-// /** @type {import('tailwindcss').Config} */
-// export default {
+// // tailwind.config.js
+// module.exports = {
 //   content: [
 //     "./index.html",
 //     "./src/**/*.{js,ts,jsx,tsx}",
 //   ],
 //   theme: {
-//     extend: {},
+//     extend: {
+//       colors: {
+//         'mero-black': '#0a0a0a',
+//         'mero-white': '#ffffff',
+//         'mero-gold': '#d4af37',
+//       },
+//     },
 //   },
 //   plugins: [],
 // }
+
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -21,7 +28,7 @@ export default {
       colors: {
         'mero-black': '#0D0D0D',
         'mero-white': '#F5F5F5',
-        'mero-gold': '#D4AF37',
+        'mero-gray': '#808080',  // Mid-gray for subtle accents
       },
       fontFamily: {
         'display': ['Inter', 'sans-serif'],
