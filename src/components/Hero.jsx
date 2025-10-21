@@ -3,66 +3,55 @@ import { ArrowDown } from "lucide-react";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-mero-black via-mero-black/95 to-mero-black" />
+    <section className="relative w-full basis-full flex-none min-h-screen overflow-hidden bg-mero-black text-center pt-24 md:pt-32">
+      {/* Background */}
+      <div className="absolute inset-0">
+        <picture className="block h-full w-full">
+          <source media="(max-width: 768px)" srcSet="/hero-mobile-blur.jpg" />
+          <img
+            src="/hero-desktop.png"  // or /hero-desktop.jpg if that’s the real type
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            onError={(e) => {
+              console.error("Hero image failed to load:", e.currentTarget.src);
+              e.currentTarget.src = "/hero-mobile-blur.png";
+            }}
+          />
+        </picture>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
+      </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
+      {/* Content */}
+      <div className="relative z-10 px-6 lg:px-12 flex flex-col items-center">
+        <motion.h2
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="text-3xl md:text-5xl lg:text-6xl font-light tracking-wide text-mero-white/90 max-w-5xl"
         >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extralight tracking-wider mb-6">
-            ELEVATE YOUR
-            <span className="block mt-2 text-mero-white">EXPERIENCE</span>
-          </h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="text-lg md:text-xl font-extralight tracking-wide text-mero-white/70 max-w-2xl mx-auto mb-12"
-          >
-            Premium audiovisual solutions for unforgettable events
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center"
-          >
-            <motion.a
-              href="#contact"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-4 bg-mero-white text-mero-black font-light tracking-wider hover:bg-mero-white/90 transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mero-white/60"
-              aria-label="Start your project"
-            >
-              START YOUR PROJECT
-            </motion.a>
-
-            <motion.a
-              href="#portfolio"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-4 border border-mero-white/30 text-mero-white font-light tracking-wider hover:bg-mero-white/10 transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mero-white/40"
-              aria-label="View our work"
-            >
-              VIEW OUR WORK
-            </motion.a>
-          </motion.div>
-        </motion.div>
+          We Bring Your Vision To Light
+        </motion.h2>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2"
-          aria-hidden="true"
+          transition={{ delay: 0.25, duration: 0.7 }}
+          className="mt-8 flex flex-col sm:flex-row gap-6 justify-center"
         >
-          <ArrowDown className="text-mero-white/50 animate-bounce" size={24} />
+          <motion.a href="#contact" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            className="px-8 py-4 bg-mero-white text-mero-black font-light tracking-wider rounded-lg hover:bg-mero-white/90 transition">
+            START YOUR PROJECT
+          </motion.a>
+          <motion.a href="#portfolio" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            className="px-8 py-4 border border-mero-white/30 text-mero-white font-light tracking-wider rounded-lg hover:bg-mero-white/10 transition">
+            VIEW OUR WORK
+          </motion.a>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2" aria-hidden="true">
+          <ArrowDown className="text-mero-white/60 animate-bounce" size={24} />
         </motion.div>
       </div>
     </section>

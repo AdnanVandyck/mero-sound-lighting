@@ -1,21 +1,3 @@
-// // tailwind.config.js
-// module.exports = {
-//   content: [
-//     "./index.html",
-//     "./src/**/*.{js,ts,jsx,tsx}",
-//   ],
-//   theme: {
-//     extend: {
-//       colors: {
-//         'mero-black': '#0a0a0a',
-//         'mero-white': '#ffffff',
-//         'mero-gold': '#d4af37',
-//       },
-//     },
-//   },
-//   plugins: [],
-// }
-
 
 /** @type {import('tailwindcss').Config} */
 export default {

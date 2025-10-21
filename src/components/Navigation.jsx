@@ -41,14 +41,27 @@ const Navigation = () => {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex justify-between items-center">
-          <motion.div
+          {/* Clickable logo -> scroll to top */}
+          <motion.a
+            href="#top"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-light tracking-wider"
+            className="flex items-center gap-3"
+            aria-label="Mero Sound & Lighting — back to top"
           >
-            <span className="text-mero-white">Mero</span>
-            <span className="text-mero-white/50 ml-2">Sound & Lighting</span>
-          </motion.div>
+            <img
+              src="/logo-mero.png"            /* put your logo file in /public as logo-mero.png */
+              alt="Mero Sound & Lighting"
+              className="h-10 w-auto object-contain"
+            />
+            <span className="text-mero-white text-sm tracking-widest uppercase font-light hidden sm:block">
+              Mero Sound & Lighting
+            </span>
+          </motion.a>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center space-x-10">
