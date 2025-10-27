@@ -11,7 +11,7 @@
 // const CACHE_PREFIX = "thumb:";   // localStorage key prefix
 
 // /** -------------------------------------------------------
-//  *  1) YOUR VIDEOS
+//  *  1) YOUR VIDEOS (two items)
 //  * ------------------------------------------------------*/
 // const videos = [
 //   { id: "vid1", src: "/gallery/mero-snl-mov-1.mov" },
@@ -120,7 +120,7 @@
 // }
 
 // /** -------------------------------------------------------
-//  *  4) GALLERY COMPONENT
+//  *  4) GALLERY COMPONENT (centered for 2 videos)
 //  * ------------------------------------------------------*/
 // export default function Gallery() {
 //   const [thumbs, setThumbs] = useState({});          // { id: dataURL }
@@ -179,9 +179,9 @@
 //           A look behind the lens — our work in motion.
 //         </p>
 
-//         {/* Grid */}
+//         {/* Centered, two-up grid */}
 //         <motion.div
-//           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+//           className="mx-auto max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8"
 //           initial="hidden"
 //           whileInView="visible"
 //           viewport={{ once: true, amount: 0.2 }}
@@ -280,42 +280,64 @@ import { X, ChevronLeft, ChevronRight, Play } from "lucide-react";
 /** -------------------------------------------------------
  *  0) CONFIG
  * ------------------------------------------------------*/
-const THUMB_VERSION = "v1";      // bump to invalidate all cached thumbs
-const SEEK_TIME = 0.3;           // seconds to skip past black frames
-const JPEG_QUALITY = 0.75;       // 0..1
-const CACHE_PREFIX = "thumb:";   // localStorage key prefix
+const THUMB_VERSION = "v1";
+const SEEK_TIME = 0.3;
+const JPEG_QUALITY = 0.75;
+const CACHE_PREFIX = "thumb:";
 
 /** -------------------------------------------------------
- *  1) YOUR VIDEOS (two items)
+ *  1) YOUR VIDEOS
+ *  IMPORTANT: Use MP4 format for better mobile support!
+ *  Convert .mov files to .mp4 using:
+ *  ffmpeg -i input.mov -c:v libx264 -c:a aac output.mp4
  * ------------------------------------------------------*/
 const videos = [
-  { id: "vid1", src: "/gallery/mero-snl-mov-1.mov" },
-  { id: "vid3", src: "/gallery/mero-snl-mov-3.mov" },
+  { 
+    id: "vid1", 
+    src: "/gallery/mero-snl-mov-1.mp4",  // Change to .mp4
+    fallback: "/gallery/mero-snl-mov-1.mov"  // Keep .mov as fallback
+  },
+  { 
+    id: "vid3", 
+    src: "/gallery/mero-snl-mov-3.mp4",  // Change to .mp4
+    fallback: "/gallery/mero-snl-mov-3.mov"
+  },
 ];
 
 /** -------------------------------------------------------
- *  2) THUMBNAIL GENERATION (canvas) → dataURL
- *     Note: works for same-origin files (public/…)
+ *  2) THUMBNAIL GENERATION (mobile-optimized)
  * ------------------------------------------------------*/
-function generateThumbDataURL(src, seekTo = SEEK_TIME) {
+function generateThumbDataURL(src, fallbackSrc, seekTo = SEEK_TIME) {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
-    video.src = src;
+    video.crossOrigin = "anonymous";
     video.muted = true;
     video.playsInline = true;
-    video.preload = "auto";
+    video.preload = "metadata";
+    
+    let triedFallback = false;
 
-    const onError = () => reject(new Error("Failed to load " + src));
+    const onError = () => {
+      if (!triedFallback && fallbackSrc) {
+        triedFallback = true;
+        video.src = fallbackSrc;
+      } else {
+        reject(new Error("Failed to load " + src));
+      }
+    };
 
     const onLoaded = () => {
       const t = Math.min(Math.max(0.1, seekTo), Math.max(0, video.duration - 0.1));
       try {
         video.currentTime = t;
       } catch {
-        // Safari sometimes throws on immediate seek—retry shortly
         setTimeout(() => {
-          try { video.currentTime = t; } catch (e) { reject(e); }
-        }, 60);
+          try { 
+            video.currentTime = t; 
+          } catch (e) { 
+            reject(e); 
+          }
+        }, 100);
       }
     };
 
@@ -324,23 +346,28 @@ function generateThumbDataURL(src, seekTo = SEEK_TIME) {
         const canvas = document.createElement("canvas");
         const w = video.videoWidth || 1280;
         const h = video.videoHeight || 720;
-        // downscale a bit for smaller dataURLs
-        const targetW = 960;
+        // More aggressive downscale for mobile
+        const targetW = 640;
         const scale = Math.min(1, targetW / w);
         canvas.width = Math.round(w * scale);
         canvas.height = Math.round(h * scale);
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", { alpha: false });
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataURL = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
         resolve(dataURL);
       } catch (e) {
         reject(e);
+      } finally {
+        video.src = "";
+        video.load();
       }
     };
 
     video.addEventListener("error", onError);
     video.addEventListener("loadedmetadata", onLoaded);
     video.addEventListener("seeked", onSeeked);
+    
+    video.src = src;
   });
 }
 
@@ -354,7 +381,6 @@ function saveThumbToCache(key, dataURL) {
     localStorage.setItem(key, JSON.stringify({ dataURL, ts: Date.now() }));
     return true;
   } catch {
-    // If quota exceeded, do a simple LRU-ish cleanup: remove oldest N thumbs
     try {
       const entries = Object.entries(localStorage)
         .filter(([k]) => k.startsWith(CACHE_PREFIX))
@@ -362,7 +388,7 @@ function saveThumbToCache(key, dataURL) {
           try { return { k, ts: JSON.parse(v)?.ts ?? 0 }; } catch { return { k, ts: 0 }; }
         })
         .sort((a, b) => a.ts - b.ts);
-      const toRemove = entries.slice(0, Math.ceil(entries.length * 0.3)); // drop oldest 30%
+      const toRemove = entries.slice(0, Math.ceil(entries.length * 0.3));
       toRemove.forEach(({ k }) => localStorage.removeItem(k));
       localStorage.setItem(key, JSON.stringify({ dataURL, ts: Date.now() }));
       return true;
@@ -383,7 +409,6 @@ function getThumbFromCache(key) {
   }
 }
 
-/** Removes cache entries from older versions or for videos not in current list */
 function cleanupCache(validKeys) {
   try {
     const valid = new Set(validKeys);
@@ -395,16 +420,15 @@ function cleanupCache(validKeys) {
 }
 
 /** -------------------------------------------------------
- *  4) GALLERY COMPONENT (centered for 2 videos)
+ *  4) GALLERY COMPONENT
  * ------------------------------------------------------*/
 export default function Gallery() {
-  const [thumbs, setThumbs] = useState({});          // { id: dataURL }
+  const [thumbs, setThumbs] = useState({});
+  const [thumbErrors, setThumbErrors] = useState({});
   const [activeIndex, setActiveIndex] = useState(null);
 
-  // Build the list of cache keys to keep
   const validKeys = videos.map((v) => keyFor(v.src, SEEK_TIME));
 
-  // On mount: load cached thumbs or generate+cache them; then cleanup old keys
   useEffect(() => {
     let cancelled = false;
 
@@ -421,25 +445,27 @@ export default function Gallery() {
       // Generate missing
       for (const v of videos) {
         const k = keyFor(v.src, SEEK_TIME);
-        if (next[v.id]) continue; // already cached
+        if (next[v.id]) continue;
         try {
-          const dataURL = await generateThumbDataURL(v.src, SEEK_TIME);
+          const dataURL = await generateThumbDataURL(v.src, v.fallback, SEEK_TIME);
           if (cancelled) return;
           saveThumbToCache(k, dataURL);
           setThumbs((p) => ({ ...p, [v.id]: dataURL }));
-        } catch {
-          // leave null; UI will show "Loading..." fallback
+        } catch (err) {
+          console.error(`Thumbnail generation failed for ${v.id}:`, err);
+          if (!cancelled) {
+            setThumbErrors((p) => ({ ...p, [v.id]: true }));
+          }
         }
       }
 
-      // Cleanup old/other-version keys
       cleanupCache(validKeys);
     };
 
     run();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once
+  }, []);
 
   const handleClose = () => setActiveIndex(null);
   const handlePrev = () => setActiveIndex((i) => (i > 0 ? i - 1 : videos.length - 1));
@@ -454,7 +480,6 @@ export default function Gallery() {
           A look behind the lens — our work in motion.
         </p>
 
-        {/* Centered, two-up grid */}
         <motion.div
           className="mx-auto max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8"
           initial="hidden"
@@ -476,8 +501,14 @@ export default function Gallery() {
                 <img
                   src={thumbs[vid.id]}
                   alt={`Thumbnail for ${vid.id}`}
+                  loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
+              ) : thumbErrors[vid.id] ? (
+                <div className="flex flex-col items-center justify-center h-full w-full text-white/50 gap-3">
+                  <Play size={48} className="opacity-30" />
+                  <span className="text-sm">Click to play</span>
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-full w-full text-white/50">
                   Loading…
@@ -518,12 +549,18 @@ export default function Gallery() {
               </button>
 
               <video
-                src={videos[activeIndex].src}
+                key={videos[activeIndex].src}
                 controls
                 autoPlay
                 playsInline
+                muted={false}
+                preload="auto"
                 className="w-full rounded-xl border border-white/20 shadow-xl bg-black"
-              />
+              >
+                <source src={videos[activeIndex].src} type="video/mp4" />
+                <source src={videos[activeIndex].fallback} type="video/quicktime" />
+                Your browser doesn't support video playback.
+              </video>
 
               {/* Nav */}
               <button
