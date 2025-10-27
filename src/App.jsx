@@ -11,9 +11,9 @@ function App() {
     <div className="min-h-screen bg-mero-black text-mero-white">
       <Navigation />
       <Hero />
+      <About />
       <Services />
       <Portfolio />
-      <About />
       <Contact />
       <Footer />
     </div>

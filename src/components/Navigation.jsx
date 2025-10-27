@@ -29,7 +29,7 @@ const Navigation = () => {
     return () => root.classList.remove("overflow-hidden");
   }, [isMobileMenuOpen]);
 
-  const navLinks = ["Services", "Portfolio", "About", "Contact"];
+  const navLinks = ["About" , "Services", "Portfolio", "Contact"];
 
   return (
     <nav
