@@ -1,9 +1,44 @@
-// import { motion } from 'framer-motion';
-// import { useScrollAnimation } from '../hooks/useScrollAnimation';
-// import { Mail, Phone, MapPin } from 'lucide-react';
+// import { useState } from "react";
+// import { motion } from "framer-motion";
+// import { useScrollAnimation } from "../hooks/useScrollAnimation";
+// import { Mail, Phone, MapPin } from "lucide-react";
 
 // const Contact = () => {
 //   const [ref, controls] = useScrollAnimation();
+//   const [sending, setSending] = useState(false);
+//   const [ok, setOk] = useState(false);
+//   const [err, setErr] = useState("");
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setSending(true);
+//     setOk(false);
+//     setErr("");
+
+//     const formData = new FormData(e.currentTarget);
+//     formData.append("access_key", "3cd39aa5-14e6-4299-98d1-28e817929f0c"); // Replace with your key
+
+//     try {
+//       const response = await fetch("https://api.web3forms.com/submit", {
+//         method: "POST",
+//         body: formData
+//       });
+
+//       const data = await response.json();
+
+//       if (data.success) {
+//         setOk(true);
+//         e.currentTarget.reset();
+//       } else {
+//         setErr(data.message || "Something went wrong. Please try again.");
+//       }
+//     } catch (error) {
+//       setErr("Something went wrong. Please try again.");
+//       console.error(error);
+//     } finally {
+//       setSending(false);
+//     }
+//   };
 
 //   return (
 //     <section id="contact" className="py-24 lg:py-32 bg-mero-black/50">
@@ -12,10 +47,7 @@
 //           ref={ref}
 //           animate={controls}
 //           initial="hidden"
-//           variants={{
-//             hidden: { opacity: 0 },
-//             visible: { opacity: 1 },
-//           }}
+//           variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
 //         >
 //           <div className="text-center mb-16">
 //             <h2 className="text-4xl md:text-5xl font-extralight tracking-wider mb-4">
@@ -40,35 +72,72 @@
 //           </div>
 
 //           <div className="max-w-2xl mx-auto">
-//             <form className="space-y-6">
+//             <form className="space-y-6" onSubmit={handleSubmit}>
+//               {/* Web3Forms configuration */}
+//               <input type="hidden" name="subject" value="New Contact from Mero Sound & Lighting Website" />
+//               <input type="hidden" name="from_name" value="Mero Website" />
+//               <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
+              
 //               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 //                 <input
+//                   name="name"
 //                   type="text"
 //                   placeholder="NAME"
+//                   required
 //                   className="bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors"
 //                 />
 //                 <input
+//                   name="email"
 //                   type="email"
 //                   placeholder="EMAIL"
+//                   required
 //                   className="bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors"
 //                 />
 //               </div>
+
 //               <input
+//                 name="phone"
+//                 type="tel"
+//                 inputMode="tel"
+//                 placeholder="PHONE"
+//                 pattern="^[0-9()+\-.\s]{7,}$"
+//                 title="Enter a valid phone number"
+//                 className="w-full bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors"
+//               />
+
+//               <input
+//                 name="custom_subject"
 //                 type="text"
 //                 placeholder="SUBJECT"
 //                 className="w-full bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors"
 //               />
+
 //               <textarea
+//                 name="message"
 //                 placeholder="MESSAGE"
 //                 rows={4}
+//                 required
 //                 className="w-full bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors resize-none"
 //               />
+
 //               <button
 //                 type="submit"
-//                 className="w-full md:w-auto px-12 py-4 bg-mero-white text-mero-black font-light tracking-wider hover:bg-mero-white/90 transition-colors duration-300"
+//                 disabled={sending}
+//                 className="w-full md:w-auto px-12 py-4 bg-mero-white text-mero-black font-light tracking-wider hover:bg-mero-white/90 transition-colors duration-300 disabled:opacity-70"
 //               >
-//                 SEND MESSAGE
+//                 {sending ? "SENDING..." : "SEND MESSAGE"}
 //               </button>
+
+//               {ok && (
+//                 <p className="mt-3 text-sm text-emerald-300">
+//                   Thanks! We'll be in touch shortly.
+//                 </p>
+//               )}
+//               {err && (
+//                 <p className="mt-3 text-sm text-red-300">
+//                   {err}
+//                 </p>
+//               )}
 //             </form>
 //           </div>
 //         </motion.div>
@@ -79,26 +148,17 @@
 
 // export default Contact;
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { Mail, Phone, MapPin } from "lucide-react";
-
-const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLScCItUTra9CbaVbRPFPQhTFyQ7mRvxdpUjOQo2WJIAf3uOjdA/viewform"; // <- REPLACE
-// Map your Google Form field ENTRY IDs here (see step 2 below)
-const FIELDS = {
-  name:   "entry.1111111111", // REPLACE
-  email:  "entry.2222222222", // REPLACE
-  phone:  "entry.3333333333", // REPLACE
-  subject:"entry.4444444444", // REPLACE
-  message:"entry.5555555555", // REPLACE
-};
 
 const Contact = () => {
   const [ref, controls] = useScrollAnimation();
   const [sending, setSending] = useState(false);
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
+  const formRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,29 +166,27 @@ const Contact = () => {
     setOk(false);
     setErr("");
 
-    const form = new FormData(e.currentTarget);
-
-    // Build URL-encoded payload for Google Forms
-    const payload = new URLSearchParams();
-    payload.append(FIELDS.name,    form.get("name")    || "");
-    payload.append(FIELDS.email,   form.get("email")   || "");
-    payload.append(FIELDS.phone,   form.get("phone")   || "");
-    payload.append(FIELDS.subject, form.get("subject") || "");
-    payload.append(FIELDS.message, form.get("message") || "");
+    const formData = new FormData(e.currentTarget);
+    formData.append("access_key", "3cd39aa5-14e6-4299-98d1-28e817929f0c"); // Replace with your key
 
     try {
-      // Important: Google Forms requires no-cors POST
-      await fetch(GOOGLE_FORM_ACTION, {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: payload.toString(),
+        body: formData
       });
 
-      setOk(true);
-      e.currentTarget.reset();
+      const data = await response.json();
+
+      if (data.success) {
+        setOk(true);
+        if (formRef.current) {
+          formRef.current.reset();
+        }
+      } else {
+        setErr(data.message || "Something went wrong. Please try again.");
+      }
     } catch (error) {
-      setErr("Something went wrong sending your message. Please try again.");
+      setErr("Something went wrong. Please try again.");
       console.error(error);
     } finally {
       setSending(false);
@@ -167,7 +225,12 @@ const Contact = () => {
           </div>
 
           <div className="max-w-2xl mx-auto">
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
+              {/* Web3Forms configuration */}
+              <input type="hidden" name="subject" value="New Contact from Mero Sound & Lighting Website" />
+              <input type="hidden" name="from_name" value="Mero Website" />
+              <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <input
                   name="name"
@@ -185,19 +248,18 @@ const Contact = () => {
                 />
               </div>
 
-              {/* NEW: Phone field */}
               <input
                 name="phone"
                 type="tel"
                 inputMode="tel"
                 placeholder="PHONE"
-                pattern="^[0-9()+\-.\s]{7,}$"
+                pattern="[0-9()+\-. ]{7,}"
                 title="Enter a valid phone number"
                 className="w-full bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors"
               />
 
               <input
-                name="subject"
+                name="custom_subject"
                 type="text"
                 placeholder="SUBJECT"
                 className="w-full bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors"
@@ -207,6 +269,7 @@ const Contact = () => {
                 name="message"
                 placeholder="MESSAGE"
                 rows={4}
+                required
                 className="w-full bg-transparent border-b border-mero-white/20 py-4 text-sm font-light tracking-wider placeholder-mero-white/40 focus:border-mero-white focus:outline-none transition-colors resize-none"
               />
 
@@ -220,7 +283,7 @@ const Contact = () => {
 
               {ok && (
                 <p className="mt-3 text-sm text-emerald-300">
-                  Thanks! We’ll be in touch shortly.
+                  Thanks! We'll be in touch shortly.
                 </p>
               )}
               {err && (
